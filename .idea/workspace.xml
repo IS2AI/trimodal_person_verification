@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a787a0e1-6923-4341-b3f5-a87228e3e207" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/trainSpeakerNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/trainSpeakerNet.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -34,7 +35,7 @@
       <updated>1633669394282</updated>
       <workItem from="1633669397440" duration="1287000" />
       <workItem from="1633673353631" duration="842000" />
-      <workItem from="1633674471188" duration="143000" />
+      <workItem from="1633674471188" duration="225000" />
     </task>
     <servers />
   </component>

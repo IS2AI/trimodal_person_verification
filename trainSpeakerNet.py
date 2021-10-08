@@ -346,25 +346,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # uncomment for debug mode
-    # sys.argv = ['./trainSpeakerNet.py', '--modality', 'wav', '--model', 'ResNetSE34Multi', '--log_input', 'True',
-    #             '--gpu_id', '0', '--trainfunc', 'proto', '--batch_size', '4', '--max_epoch', '4', '--num_images', '1',
-    #             '--max_frames', '200', '--eval_frames', '200', '--weight_decay', '0.1', '--encoder_type', 'SAP',
-    #             '--save_path', '/home/madina_abdrakhmanova/Results/sf_pv/multimodal/exp9', '--nPerSpeaker', '3',
-    #             '--train_lists_save_path', '/home/madina_abdrakhmanova/Results/sf_pv/multimodal/train_lists',
-    #             '--eval_lists_save_path', '/home/madina_abdrakhmanova/Results/sf_pv/multimodal/eval_lists',
-    #             '--train_path', '/home/madina_abdrakhmanova/Datasets/sf_pv/data_v2_16000', '--test_interval', '1',
-    #             '--test_path', '/home/madina_abdrakhmanova/Datasets/sf_pv/data_v2_16000',
-    #             '--test_list', '/home/madina_abdrakhmanova/Datasets/sf_pv/metadata/valid_list_v2.txt',
-    #             '--train_list', '/home/madina_abdrakhmanova/Datasets/sf_pv/metadata/train_list_v2.txt'
-    # #            ,'--eval', 'True', '--miss_modality', 'wav']
-    # #            ,'--eval', 'True']
-    #             , '--noisy_train', 'True',  '--musan_path', '/home/madina_abdrakhmanova/Datasets/musan_split', '--snr', '10.0']
-    #
-    #             ,'--noisy_train', 'True', '--noisy_eval', 'True', '--musan_path', '/home/madina_abdrakhmanova/Datasets/musan_split']
-    # #            ,'--p_noise', '0.5', '--eval', 'True', '--noisy_eval', 'True', '--musan_path', '/home/madina_abdrakhmanova/Datasets/musan_split']
-    #            ]
-
     args = parser.parse_args();
 
     if args.config is not None:
@@ -394,7 +375,7 @@ if __name__ == '__main__':
     random.seed(args.seed)
     numpy.random.seed(args.seed)
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-    #torch.set_deterministic(True)  # for pytorch version 1.7
+    torch.set_deterministic(True)  # for pytorch version 1.7
     torch.use_deterministic_algorithms(True) #for pytorch version 1.8
 
     main(args)
