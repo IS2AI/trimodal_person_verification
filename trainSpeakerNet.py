@@ -42,7 +42,6 @@ parser.add_argument('--batch_size', type=int, default=200, help='Batch size, num
 parser.add_argument('--max_seg_per_spk', type=int, default=500,
                     help='Maximum number of utterances per speaker per epoch');
 parser.add_argument('--nDataLoaderThread', type=int, default=0, help='Number of loader threads');
-parser.add_argument('--augment', type=bool, default=False, help='Augment input')
 parser.add_argument('--seed', type=int, default=10, help='Seed for the random number generator');
 
 ## Training details
