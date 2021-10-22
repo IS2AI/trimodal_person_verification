@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="madina_abdrakhmanova@localhost:6000">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/madina_abdrakhmanova/Projects/trimodal_speaker_recognition" local="$PROJECT_DIR$" web="/" />
+            <mapping local="" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

@@ -2,7 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Remote VoxCelebTrainer Python 3.8.5 (sftp://madina_abdrakhmanova@localhost:6000/home/madina_abdrakhmanova/remote_ssh_interpreter_voxceleb_trainer/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

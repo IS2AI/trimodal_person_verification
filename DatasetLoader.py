@@ -88,8 +88,6 @@ def wav_augment(x, t, musan_path, snr, evalmode):
     noise_db = 10 * numpy.log10(numpy.mean(noiseaudio[0] ** 2) + 1e-4)
     noise = numpy.sqrt(10 ** ((clean_db - noise_db - noise_snr) / 10)) * noiseaudio
 
-    # print(snr(x, noise))
-
     return noise + x
 
 
@@ -212,7 +210,7 @@ def load_train_lists(path):
 
 
 class train_dataset_loader(Dataset):
-    def __init__(self, train_list, musan_path, rir_path, max_frames, train_path, train_lists_save_path,
+    def __init__(self, train_list, musan_path, max_frames, train_path, train_lists_save_path,
                  **kwargs):
 
         self.mean_rgb = [92.19873, 70.86596, 62.344334]
@@ -221,7 +219,6 @@ class train_dataset_loader(Dataset):
         self.train_list = train_list
         self.max_frames = max_frames
         self.musan_path = musan_path
-        self.rir_path = rir_path
         self.modality = kwargs["modality"].lower()
         self.num_images = kwargs["num_images"]
         self.img_size = (kwargs["image_width"], kwargs["image_height"])
@@ -424,7 +421,6 @@ class test_dataset_loader(Dataset):
         self.test_list_rgb = []
         self.test_list_thr = []
         self.modality = kwargs["modality"].lower()
-        self.miss_modality = kwargs["miss_modality"].lower()
         self.num_images = kwargs["num_images"]
         self.img_size = (kwargs["image_width"], kwargs["image_height"])
         self.mean_rgb = [92.19873, 70.86596, 62.344334]
@@ -435,10 +431,7 @@ class test_dataset_loader(Dataset):
         self.snr = kwargs["snr"]
         print("\nInitializing the test_data_loader")
 
-        #if "wav" in self.modality and ("rgb" in self.modality or "thr" in self.modality):
         num = self.num_eval
-        #else:
-        #   num = self.num_images
 
         # if lists exist, load them
         eval_lists_save_path = os.path.join(eval_lists_save_path, "num_images_" + str(num))
