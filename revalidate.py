@@ -212,6 +212,7 @@ def main_worker(gpu, ngpus_per_node, args):
         scorefile.close()
 
         eval_scorefile = open(noise_result_save_path + "/eval_scores.txt", "a+");
+
         print(lines[1])
         eval_scorefile.write(lines[1])
         print("\nEpoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
@@ -290,8 +291,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # uncomment for debug mode
-
     args = parser.parse_args();
 
     if args.config is not None:
