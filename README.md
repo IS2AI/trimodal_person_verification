@@ -85,24 +85,36 @@ See *trainSpeakerNet.py* for details on where the data should be stored.
 ### Evaluating pretrained models: noisy test data
 
 *Unimodal models*
+
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wav --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wav/exp2
+./revalidate.py --model ResNetSE34Multi --modality wav --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wav/exp2
+
+./revalidate.py --model ResNetSE34Multi --modality wav --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wav/exp2
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/rgb/exp2 
+./revalidate.py --model ResNetSE34Multi --modality rgb --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/rgb/exp2
+
+./revalidate.py --model ResNetSE34Multi --modality rgb --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/rgb/exp2 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality thr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/thr/exp2 
+./revalidate.py --model ResNetSE34Multi --modality thr --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/thr/exp2
+
+./revalidate.py --model ResNetSE34Multi --modality thr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/thr/exp2 
 ```
+
 *Multimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp2 
+./revalidate.py --model ResNetSE34Multi --modality wavrgb --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp2
+
+./revalidate.py --model ResNetSE34Multi --modality wavrgb --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp2 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp2 
+./revalidate.py --model ResNetSE34Multi --modality wavrgbthr --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgbthr/exp2
+
+./revalidate.py --model ResNetSE34Multi --modality wavrgbthr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt    --noisy_eval True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp2 
 ```
 
 
