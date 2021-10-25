@@ -20,67 +20,67 @@ See *trainSpeakerNet.py* for details on where the data should be stored.
 ### Training examples : clean data
 *Unimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wav --log_input True --trainfunc angleproto --max_epoch 1500 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/wav/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wav --log_input True --trainfunc angleproto --max_epoch 1500 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/wav/exp1 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/rgb/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/rgb/exp1 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality thr --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/thr/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality thr --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/thr/exp1 
 ```
 *Multimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/wavrgb/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/wavrgb/exp1 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.1 --seed 1 --save_path exps/wavrgb/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.1 --seed 1 --save_path exps/wavrgb/exp1 
 ```
 
 ### Training examples : noisy data
 *Unimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wav --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 1500 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.001 --seed 1 --save_path exps/wav/exp2
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wav --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 1500 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.001 --seed 1 --save_path exps/wav/exp2
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/rgb/exp2 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/rgb/exp2 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality thr --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/thr/exp2 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality thr --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/thr/exp2 
 ```
 *Multimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/wavrgb/exp2 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.01 --seed 1 --save_path exps/wavrgb/exp2 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.1 --seed 1 --save_path exps/wavrgb/exp2 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --noisy_train True --p_noise 0.3 --snr 8 --log_input True --trainfunc angleproto --max_epoch 600 --batch_size 100 --nPerSpeaker 9 --max_frames 200 --eval_frames 200 --weight_decay 0.1 --seed 1 --save_path exps/wavrgb/exp2 
 ```
 
 ### Evaluating pretrained models: clean test data
 *Unimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wav --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wav/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wav --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/wav/exp1 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/rgb/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality rgb --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/rgb/exp1 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality thr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/thr/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality thr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True --trainfunc angleproto --eval_frames 200 --save_path exps/thr/exp1 
 ```
 *Multimodal models*
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb  --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True  --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgb  --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True  --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp1 
 ```
 
 ```
-./trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True  --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp1 
+python trainSpeakerNet.py --model ResNetSE34Multi --modality wavrgbthr --eval True --valid_model True --test_path data/test --test_list data/metadata/test_list.txt   --log_input True  --trainfunc angleproto --eval_frames 200 --save_path exps/wavrgb/exp1 
 ```
 ### Evaluating pretrained models: noisy test data
 
