@@ -1,5 +1,5 @@
 # trimodal_person_verification
-This repository contains the code, pretrained models and preprocessed dataset featured in "A Study of Multimodal Person Verification Using Audio-Visual-Thermal Data".
+This repository contains the code, and preprocessed dataset featured in "A Study of Multimodal Person Verification Using Audio-Visual-Thermal Data".
 
 Person verification is the general task of verifying person’s identity  using  various  biometric  characteristics. We study an approach to multimodal person verification using audio, visual, and thermal modalities. In particular, we implemented unimodal, bimodal, and trimodal verification systems using the state-of-the-art deep learning architectures and compared their performance under clean and noisy conditions.
 ### Dependencies
