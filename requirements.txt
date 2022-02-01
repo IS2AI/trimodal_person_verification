@@ -7,3 +7,4 @@ tqdm
 pyyaml
 Pillow
 soundfile
+kornia
