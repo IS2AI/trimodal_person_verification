@@ -200,6 +200,7 @@ class ModelTrainer(object):
         setfiles.sort()
         ## Define test data loader
         test_dataset = test_dataset_loader(setfiles, test_path, **kwargs)
+
         test_loader = torch.utils.data.DataLoader(
             test_dataset,
             batch_size=1,

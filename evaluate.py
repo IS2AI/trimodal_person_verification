@@ -20,6 +20,8 @@ import torch.multiprocessing as mp
 ## ===== ===== ===== ===== ===== ===== ===== =====
 import os
 
+# os.environ["CUDA_VISIBLE_DEVICES"]='0'
+
 parser = argparse.ArgumentParser(description="SpeakerNet");
 
 parser.add_argument('--config', type=str, default=None, help='Config YAML file');
@@ -33,7 +35,7 @@ parser.add_argument('--image_height', type=int, default=124,
                     help='Height of thermal and rgb images');
 
 ## Data loader
-parser.add_argument('--max_frames', type=int, default=200, 
+parser.add_argument('--max_frames', type=int, default=200,
                     help='Input length to the network for training');
 parser.add_argument('--eval_frames', type=int, default=300,
                     help='Input length to the network for testing; 0 uses the whole files');
@@ -151,76 +153,56 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         s = WrappedModel(s).cuda(args.gpu)
 
-    it = 1
-    print("iter " + str(it))
-
-    ## Write args to scorefile
-    if args.eval:
-        scorefile = open(args.result_save_path + "/scores.txt", "r");
-        lines_veer = [[int(line.split()[1]), float(line.split()[3])] for line in scorefile if "VEER" in line]
-        lines_veer = numpy.array(lines_veer)
-
-        if args.valid_model:
-            args.model_it = lines_veer[:, 1].argmin()
-        else:
-            args.model_it = -1
-    else:
-        scorefile = open(args.result_save_path + "/scores.txt", "a+");
-        args.model_it = -1
-
-        ## Initialise trainer and data loader
-        train_dataset = train_dataset_loader(**vars(args))
-
-        train_sampler = train_dataset_sampler(train_dataset, **vars(args))
-
-        train_loader = torch.utils.data.DataLoader(
-            train_dataset,
-            batch_size=args.batch_size,
-            num_workers=args.nDataLoaderThread,
-            sampler=train_sampler,
-            pin_memory=False,
-            worker_init_fn=worker_init_fn,
-            drop_last=True,
-        )
-
-    trainer = ModelTrainer(s, **vars(args))
-
-    ## Load model weights
-
     modelfiles = glob.glob('%s/model0*.model' % args.model_save_path)
     modelfiles.sort()
-    if len(modelfiles) >= 1:
 
-        ## Madina: enable an option to load a specific model
+    filename = "scores"
+    new_result_save_path = args.result_save_path
+    if args.noisy_eval:
+        new_result_save_path = os.path.join(new_result_save_path, "noise_p_{}".format(args.p_noise))
+        filename = filename + "_snr_{}_p_{}".format(args.snr, args.p_noise)
+
+    if "gender" in args.test_list:
+        new_result_save_path = os.path.join(new_result_save_path, "gender")
+        filename = filename + "_gender"
+    filename = filename + ".txt"
+
+    if not (os.path.exists(new_result_save_path)):
+        os.makedirs(new_result_save_path)
+    print("New results save path {}".format(new_result_save_path))
+
+    scorefile = open(os.path.join(new_result_save_path, filename), "r");
+    lines_veer = [[int(line.split()[1]), float(line.split()[3])] for line in scorefile if "VEER" in line]
+    lines_veer = numpy.array(lines_veer)
+
+    if args.valid_model:
+        args.model_it = lines_veer[:, 1].argmin()
+    else:
+        args.model_it = -1
+
+    trainer = ModelTrainer(s, **vars(args))
+    if len(modelfiles) >= 1:
         if (args.model_it == -1):
             print("Requested to load the model at the latest iteration")
         else:
             print("Requested to load the model at the iteration id = {}".format(int(lines_veer[args.model_it, 0])))
         trainer.loadParameters(modelfiles[args.model_it]);
         print("Loaded model {}".format(modelfiles[args.model_it]))
-        it = int(os.path.splitext(os.path.basename(modelfiles[args.model_it]))[0][5:]) + 1
 
     elif (args.initial_model != ""):
         trainer.loadParameters(args.initial_model);
         print("Model {} loaded!".format(args.initial_model));
+    pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
 
-    for ii in range(1, it):
-        trainer.__scheduler__.step()
+    print('Total parameters: ', pytorch_total_params)
+    print('Test list', args.test_list)
 
-    ## Evaluation code - must run on single GPU
-    if args.eval:
-        pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
+    assert args.distributed == False
 
-        print('Total parameters: ', pytorch_total_params)
-        print('Test list', args.test_list)
-
-        assert args.distributed == False
-
-        sc, lab, _ = trainer.evaluateFromList(**vars(args))
-        result = tuneThresholdfromScore(sc, lab, [1, 0.1]);
-
-        recordPredictions(sc, result[4], args.result_save_path, **vars(args))
-
+    sc, lab, _ = trainer.evaluateFromList(**vars(args))
+    result = tuneThresholdfromScore(sc, lab, [1, 0.1]);
+    recordPredictions(sc, result[4], new_result_save_path, **vars(args))
+    if "valid" not in args.test_list:
         p_target = 0.05
         c_miss = 1
         c_fa = 1
@@ -229,75 +211,23 @@ def main_worker(gpu, ngpus_per_node, args):
         mindcf, threshold = ComputeMinDcf(fnrs, fprs, thresholds, p_target, c_miss, c_fa)
 
         scorefile.close()
+
         scorefile = open(args.result_save_path + "/scores.txt", "r");
         lines = [line for line in scorefile if ("Epoch {:d}".format(int(lines_veer[args.model_it, 0])) in line)]
         scorefile.close()
 
-        eval_scorefile = open(args.result_save_path + "/eval_scores.txt", "a+");
-        print(lines[0])
-        eval_scorefile.write(lines[0])
+        eval_scorefile = open(new_result_save_path + "/eval_scores.txt", "a+");
+
         print(lines[1])
         eval_scorefile.write(lines[1])
+        print("\nEpoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
+        eval_scorefile.write("Epoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
         print('\n', time.strftime("%Y-%m-%d %H:%M:%S"), "EER {:2.4f}".format(result[1]),
-              "MinDCF {:2.5f}".format(mindcf), "Noisy evaluation {}".format(args.noisy_eval), "snr {}".format(args.snr));
+              "MinDCF {:2.5f}".format(mindcf), "Noisy evaluation {}".format(args.noisy_eval),
+              "snr {}".format(args.snr), "p {}".format(args.p_noise));
         eval_scorefile.write(
-            "EER {:2.4f} MinDCF {:2.5f} Noisy evaluation {} snr {} \n".format(result[1], mindcf, args.noisy_eval, args.snr))
+            "EER {:2.4f} MinDCF {:2.5f} Noisy evaluation {} snr {} p {}\n".format(result[1], mindcf, args.noisy_eval, args.snr, args.p_noise))
         eval_scorefile.close()
-        quit();
-
-    ## Save training code and params
-    if args.gpu == 0:
-        pyfiles = glob.glob('./*.py')
-        strtime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
-        zipf = zipfile.ZipFile(args.result_save_path + '/run%s.zip' % strtime, 'w', zipfile.ZIP_DEFLATED)
-        for file in pyfiles:
-            zipf.write(file)
-        zipf.close()
-
-        with open(args.result_save_path + '/run%s.cmd' % strtime, 'w') as f:
-            f.write('%s' % args)
-
-    ## Core training script
-    for it in range(it, args.max_epoch + 1):
-
-        train_sampler.set_epoch(it)
-
-        clr = [x['lr'] for x in trainer.__optimizer__.param_groups]
-
-        loss, traineer = trainer.train_network(train_loader, verbose=(args.gpu == 0));
-
-        if it % args.test_interval == 0 and args.gpu == 0:
-
-            ## Perform evaluation only in single GPU training
-            if not args.distributed:
-                sc, lab, _ = trainer.evaluateFromList(**vars(args))
-                result = tuneThresholdfromScore(sc, lab, [1, 0.1]);
-
-                print('\n', time.strftime("%Y-%m-%d %H:%M:%S"), "Epoch {:d} VEER {:2.4f}".format(it, result[1]));
-                scorefile.write("Epoch {:d} VEER {:2.4f}\n".format(it, result[1]));
-
-            trainer.saveParameters(args.model_save_path + "/model%09d.model" % it);
-
-        if args.gpu == 0:
-            # print('\n',time.strftime("%Y-%m-%d %H:%M:%S"), "Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f}".format(it, traineer.item(), loss.item(), max(clr)));
-            # scorefile.write("Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f} \n".format(it, traineer.item(), loss.item(), max(clr)));
-            print('\n', time.strftime("%Y-%m-%d %H:%M:%S"),
-                  "Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f}".format(it, traineer, loss, max(clr)));
-            scorefile.write("Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f} \n".format(it, traineer, loss, max(clr)));
-
-        scorefile.flush()
-
-        if ("nsml" in sys.modules) and args.gpu == 0:
-            training_report = {};
-            training_report["summary"] = True;
-            training_report["epoch"] = it;
-            training_report["step"] = it;
-            training_report["train_loss"] = loss;
-
-            nsml.report(**training_report);
-
-    scorefile.close();
 
 
 ## ===== ===== ===== ===== ===== ===== ===== =====
@@ -319,6 +249,9 @@ def main(args):
     else:
         args.eval_lists_save_path = os.path.join(args.eval_lists_save_path, "test")
         args.noisy_eval_lists_save_path = os.path.join(args.noisy_eval_lists_save_path, "test")
+    if "gender" in args.test_list:
+        args.eval_lists_save_path = os.path.join(args.eval_lists_save_path, "gender")
+        args.noisy_eval_lists_save_path = os.path.join(args.noisy_eval_lists_save_path, "gender")
 
     if not (os.path.exists(args.model_save_path)):
         os.makedirs(args.model_save_path)

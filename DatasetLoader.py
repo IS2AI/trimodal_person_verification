@@ -56,6 +56,31 @@ def rgb_augment(x, t, ax=None, k=7, s=(5, 7)):
 
     return ret_
 
+def rgb_augment_eval(x, t, direction_, ax=None, k=7, s=(5, 7)):
+    title_ = ""
+
+    # vertical blur
+    if t == 0:
+        title_ = f"Vertical, direction={direction_:0.3f}, k={k}"
+
+        ret_ = motion_blur(x, kernel_size=k, angle=90, direction=direction_)
+    # horizontal blur
+    elif t == 1:
+        title_ = f"Horizontal, direction={direction_:0.3f}, k={k}"
+
+        ret_ = motion_blur(x, kernel_size=k, angle=180, direction=direction_)
+
+    elif t == 2:
+        title_ = f"Gaussian, k={k}, s={s}"
+        ret_ = GaussianBlur(kernel_size=k, sigma=s)(x)
+
+    if ax is not None:
+        ax.imshow(ret_[0].permute(1, 2, 0) + 0.5)
+        ax.set_title(title_)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    return ret_
 
 def thr_augment(x, t, ax=None, k=7, s=(5, 7)):
     title_ = f"Gaussian, k={k}"
@@ -80,7 +105,9 @@ def snr(signal, noise):
 def wav_augment(x, t, musan_path, snr, evalmode):
     t = ['music', 'noise', 'speech'][t]
     path = os.path.join(musan_path, t, "*", "*", "*.wav")
-    t_audio = random.choice(glob.glob(path))
+    all_noises = glob.glob(path)
+    random_choice = numpy.random.randint(len(all_noises))
+    t_audio = all_noises[random_choice]
 
     clean_db = 10 * numpy.log10(numpy.mean(x ** 2) + 1e-4)
     noiseaudio = loadWAV(t_audio, 200, evalmode=evalmode)
@@ -91,7 +118,37 @@ def wav_augment(x, t, musan_path, snr, evalmode):
     return noise + x
 
 
-def noise_evaluation_set(modality, wav, rgb, thr, musan_path, evalmode, p_noise=0.3, snr=0, k=3):
+def wav_augment_eval(x, t_audio, snr, evalmode):
+
+    clean_db = 10 * numpy.log10(numpy.mean(x ** 2) + 1e-4)
+    noiseaudio = loadWAV(t_audio, 200, evalmode=evalmode)
+    noise_snr = snr
+    noise_db = 10 * numpy.log10(numpy.mean(noiseaudio[0] ** 2) + 1e-4)
+    noise = numpy.sqrt(10 ** ((clean_db - noise_db - noise_snr) / 10)) * noiseaudio
+
+    return noise + x
+
+def noise_evaluation_set(modality, noise_data, wav, rgb, thr, musan_path, evalmode, p_noise=0.3, snr=0, k=3):
+    #
+    # Inputs should be tensors
+    #
+    data = [wav, rgb, thr]
+    n, t, mode, t_audio, direction = float(noise_data[0]), int(noise_data[1]), int(noise_data[2]), noise_data[3], float(noise_data[4])
+
+    if n < p_noise:
+        if t == k + 1:
+            # the random tensor is sampled from normal distribution ~N(0,1)
+            data[mode] = torch.randn(size=data[mode].size())
+        else:
+            if mode == 0:
+                data[mode] = wav_augment_eval(data[mode], t_audio, snr, evalmode)
+            elif mode == 1:
+                data[mode] = rgb_augment_eval(data[mode], t-1, direction)
+            else:
+                data[mode] = thr_augment(data[mode], t-1)
+    return (*data,)
+
+def noise_train_set(modality, wav, rgb, thr, musan_path, evalmode, p_noise=0.3, snr=0, k=3):
     #
     # Inputs should be tensors
     #
@@ -127,7 +184,6 @@ def noise_evaluation_set(modality, wav, rgb, thr, musan_path, evalmode, p_noise=
                 data[mode] = augment_functions[mode](data[mode], t-1)
 
     return (*data,)
-
 
 def get_img_list(data_path, filename, speaker_id, modality, max_images):
     tmp = sorted(glob.glob(os.path.join(data_path, speaker_id, modality, filename)),
@@ -317,7 +373,7 @@ class train_dataset_loader(Dataset):
                 noisy_feat_rgb = []
                 noisy_feat_thr = []
                 for i in range(len(feat)):
-                    data = noise_evaluation_set(self.modality, feat[i], torch.FloatTensor(feat_rgb[i]).permute(0, 3, 1, 2), torch.FloatTensor(feat_thr[i]).permute(0, 3, 1, 2),
+                    data = noise_train_set(self.modality, feat[i], torch.FloatTensor(feat_rgb[i]).permute(0, 3, 1, 2), torch.FloatTensor(feat_thr[i]).permute(0, 3, 1, 2),
                                                 self.musan_path, False, self.p_noise, self.snr)
                     noisy_feat.append(data[0])
                     noisy_feat_rgb.append(data[1])
@@ -337,7 +393,7 @@ class train_dataset_loader(Dataset):
                 noisy_feat = []
                 noisy_feat_rgb = []
                 for i in range(len(feat)):
-                    data = noise_evaluation_set(self.modality, feat[i], torch.FloatTensor(feat_rgb[i]).permute(0, 3, 1, 2), None, self.musan_path, False, self.p_noise, self.snr)
+                    data = noise_train_set(self.modality, feat[i], torch.FloatTensor(feat_rgb[i]).permute(0, 3, 1, 2), None, self.musan_path, False, self.p_noise, self.snr)
                     noisy_feat.append(data[0])
                     noisy_feat_rgb.append(data[1])
                 noisy_feat = numpy.concatenate(noisy_feat, axis=0)
@@ -359,7 +415,7 @@ class train_dataset_loader(Dataset):
             if self.noisy_train:
                 noisy_feat = []
                 for i in range(len(feat)):
-                    data = noise_evaluation_set(self.modality, feat[i], None, None, self.musan_path, False, self.p_noise, self.snr)
+                    data = noise_train_set(self.modality, feat[i], None, None, self.musan_path, False, self.p_noise, self.snr)
                     noisy_feat.append(data[0])
                 noisy_feat = numpy.concatenate(noisy_feat, axis=0)
                 return (torch.FloatTensor(noisy_feat)), self.data_label[index]
@@ -371,7 +427,7 @@ class train_dataset_loader(Dataset):
             if self.noisy_train:
                 noisy_feat_rgb = []
                 for i in range(len(feat_rgb)):
-                    data = noise_evaluation_set(self.modality, None, torch.FloatTensor(feat_rgb[i]).permute(0, 3, 1, 2), None, self.musan_path, False, self.p_noise, self.snr)
+                    data = noise_train_set(self.modality, None, torch.FloatTensor(feat_rgb[i]).permute(0, 3, 1, 2), None, self.musan_path, False, self.p_noise, self.snr)
                     noisy_feat_rgb.append(data[1])
                 return torch.cat(noisy_feat_rgb, axis=0), self.data_label[index]
             else:
@@ -383,7 +439,7 @@ class train_dataset_loader(Dataset):
             if self.noisy_train:
                 noisy_feat_thr = []
                 for i in range(len(feat_thr)):
-                    data = noise_evaluation_set(self.modality, None, None, torch.FloatTensor(feat_thr[i]).permute(0, 3, 1, 2), self.musan_path, False, self.p_noise, self.snr)
+                    data = noise_train_set(self.modality, None, None, torch.FloatTensor(feat_thr[i]).permute(0, 3, 1, 2), self.musan_path, False, self.p_noise, self.snr)
                     noisy_feat_thr.append(data[2])
                 return torch.cat(noisy_feat_thr, axis=0), self.data_label[index]
             else:
@@ -411,9 +467,56 @@ def load_test_lists(path):
 
     return rgb_list, thr_list
 
+def load_noise_data(path):
+    print("Loading precomputed noise data parameters for the test list")
+    noise_data = []
+    with open(os.path.join(path, "noise.txt")) as f:
+        for line in f.readlines():
+            row = line.split()
+            noise_data.append([float(row[0]), int(row[1]), int(row[2]), row[3], float(row[4])])
+    return noise_data
+
+def generate_noise_data(test_list, modality, path, p_noise, musan_path):
+    os.makedirs(path)
+    noise_data= []
+    print("Generating noise data parameters for the test list")
+    for i in range(len(test_list)):
+        n = numpy.random.rand()
+        if n < p_noise:
+            t = numpy.random.randint(3) + 1
+            if "wav" in modality and "rgb" in modality and "thr" in modality:
+                mode = numpy.random.randint(3)
+            elif "wav" in modality and "rgb" in modality:
+                mode = numpy.random.randint(2)
+            elif modality == "wav":
+                mode = 0
+            elif modality == "rgb":
+                mode = 1
+            elif modality == "thr":
+                mode = 2
+            if mode == 0:
+                noise_t = ['music', 'noise', 'speech'][t-1]
+                musan_filepath = os.path.join(musan_path, noise_t, "*", "*", "*.wav")
+                selected_noises = glob.glob(musan_filepath)
+                random_choice = numpy.random.randint(len(selected_noises))
+                t_audio = selected_noises[random_choice]
+                noise_data.append([n, t, mode, t_audio, -1])
+
+            elif mode == 1 and (t == 1 or t ==2):
+                direction = numpy.random.uniform(-1, 1)
+                noise_data.append([n, t, mode, -1, direction])
+            else:
+                noise_data.append([n, t, mode, -1, -1])
+        else:
+            noise_data.append([n, -1, -1, -1, -1])
+
+    with open(os.path.join(path, 'noise.txt'), 'w') as f:
+        for line in noise_data:
+            f.write("{} {} {} {} {}\n".format(line[0], line[1], line[2], line[3], line[4]))
+    return noise_data
 
 class test_dataset_loader(Dataset):
-    def __init__(self, test_list, test_path, eval_frames, eval_lists_save_path, **kwargs):
+    def __init__(self, test_list, test_path, eval_frames, eval_lists_save_path, noisy_eval_lists_save_path, **kwargs):
         self.max_frames = eval_frames;
         self.num_eval = kwargs["num_eval"]
         self.test_path = test_path
@@ -433,33 +536,42 @@ class test_dataset_loader(Dataset):
 
         num = self.num_eval
 
-        # if lists exist, load them
+        # if rgb and thr lists exist, load them
         eval_lists_save_path = os.path.join(eval_lists_save_path, "num_images_" + str(num))
         if os.path.exists(eval_lists_save_path):
             self.test_list_rgb, self.test_list_thr = load_test_lists(eval_lists_save_path)
-            return
+        else:
+            # based on test_list create test_list_rgb and test_list_thr to contain the relevant names
+            for audio_filename in self.test_list:
+                speaker_id = audio_filename.split('/')[0]
+                filename = audio_filename.split('/')[-1].split('.')[0][:-1] + '*'
 
-        # based on test_list create test_list_rgb and test_list_thr to contain the relevant names
-        for audio_filename in self.test_list:
-            speaker_id = audio_filename.split('/')[0]
-            filename = audio_filename.split('/')[-1].split('.')[0][:-1] + '*'
+                img_list = get_img_list(self.test_path, filename, speaker_id, "rgb", num)
+                self.test_list_rgb.append(img_list)
 
-            img_list = get_img_list(self.test_path, filename, speaker_id, "rgb", num)
-            self.test_list_rgb.append(img_list)
+                img_list = get_img_list(self.test_path, filename, speaker_id, "thr", num)
+                self.test_list_thr.append(img_list)
 
-            img_list = get_img_list(self.test_path, filename, speaker_id, "thr", num)
-            self.test_list_thr.append(img_list)
+            # save lists for further usage
+            os.makedirs(eval_lists_save_path)
 
-        # save lists for further usage
-        os.makedirs(eval_lists_save_path)
+            with open(os.path.join(eval_lists_save_path, 'rgb_list.txt'), 'w') as f:
+                for line in self.test_list_rgb:
+                    f.write(" ".join(line) + "\n")
 
-        with open(os.path.join(eval_lists_save_path, 'rgb_list.txt'), 'w') as f:
-            for line in self.test_list_rgb:
-                f.write(" ".join(line) + "\n")
+            with open(os.path.join(eval_lists_save_path, 'thr_list.txt'), 'w') as f:
+                for line in self.test_list_thr:
+                    f.write(" ".join(line) + "\n")
 
-        with open(os.path.join(eval_lists_save_path, 'thr_list.txt'), 'w') as f:
-            for line in self.test_list_thr:
-                f.write(" ".join(line) + "\n")
+
+        if self.noisy_eval:
+            noisy_eval_lists_save_path = os.path.join(noisy_eval_lists_save_path, self.modality)
+            if os.path.exists(noisy_eval_lists_save_path):
+                self.noise_data = load_noise_data(noisy_eval_lists_save_path)
+            else:
+                self.noise_data = generate_noise_data(self.test_list, self.modality, noisy_eval_lists_save_path, self.p_noise, self.musan_path)
+
+
 
     def __getitem__(self, index):
         if "wav" in self.modality:
@@ -476,16 +588,17 @@ class test_dataset_loader(Dataset):
 
             thr = torch.FloatTensor(thr).permute(0, 3, 1, 2)
 
+
         if "wav" in self.modality and "rgb" in self.modality and "thr" in self.modality:
             if self.noisy_eval:
-                data = noise_evaluation_set(self.modality, audio, rgb, thr, self.musan_path, True, self.p_noise, self.snr)
+                data = noise_evaluation_set(self.modality, self.noise_data[index], audio, rgb, thr, self.musan_path, True, self.p_noise, self.snr)
                 return (torch.FloatTensor(data[0]), data[1], data[2]), self.test_list[index]
             else:
                 return (torch.FloatTensor(audio), rgb, thr), self.test_list[index]
 
         elif "wav" in self.modality and "rgb" in self.modality:
             if self.noisy_eval:
-                data = noise_evaluation_set(self.modality, audio, rgb, None, self.musan_path, True, self.p_noise, self.snr)
+                data = noise_evaluation_set(self.modality, self.noise_data[index], audio, rgb, None, self.musan_path, True, self.p_noise, self.snr)
                 return (torch.FloatTensor(data[0]), data[1]), self.test_list[index]
             else:
                 return (torch.FloatTensor(audio), rgb), self.test_list[index]
@@ -495,21 +608,21 @@ class test_dataset_loader(Dataset):
 
         elif "wav" in self.modality:
             if self.noisy_eval:
-                data = noise_evaluation_set(self.modality, audio, None, None, self.musan_path, True, self.p_noise, self.snr)
+                data = noise_evaluation_set(self.modality, self.noise_data[index], audio, None, None, self.musan_path, True, self.p_noise, self.snr)
                 return torch.FloatTensor(data[0]), self.test_list[index]
             else:
                 return torch.FloatTensor(audio), self.test_list[index]
 
         elif "rgb" in self.modality:
             if self.noisy_eval:
-                data = noise_evaluation_set(self.modality, None, rgb,  None, self.musan_path, True, self.p_noise, self.snr)
+                data = noise_evaluation_set(self.modality, self.noise_data[index], None, rgb,  None, self.musan_path, True, self.p_noise, self.snr)
                 return data[1], self.test_list[index]
             else:
                 return rgb, self.test_list[index]
 
         elif "thr" in self.modality:
             if self.noisy_eval:
-                data = noise_evaluation_set(self.modality, None, None, thr, self.musan_path, True, self.p_noise, self.snr)
+                data = noise_evaluation_set(self.modality, self.noise_data[index], None, None, thr, self.musan_path, True, self.p_noise, self.snr)
                 return data[2], self.test_list[index]
             else:
                 return thr, self.test_list[index]

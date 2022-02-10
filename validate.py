@@ -74,7 +74,9 @@ parser.add_argument('--initial_model', type=str, default="", help='Initial model
 parser.add_argument('--save_path', type=str, default="exps/exp1", help='Path for model and logs');
 parser.add_argument('--train_lists_save_path', type=str, default="data/metadata/train",
                     help="Path to the list of filenames (train set)");
-parser.add_argument('--eval_lists_save_path', type=str, default="data/metadata/", help="Path to the list of filenames (test or valid set");
+parser.add_argument('--eval_lists_save_path', type=str, default="data/metadata/",
+                    help="Path to the list of filenames (test or valid set");
+parser.add_argument('--noisy_eval_lists_save_path', type=str, default="data/metadata/", help="Path to the list of noise applied to every instance of eval list (test or valid set");
 
 ## Training and test data
 parser.add_argument('--train_list', type=str, default="data/metadata/train_list.txt", help='Train list');
@@ -104,8 +106,6 @@ parser.add_argument('--num_eval', type=int, default=10, dest='num_eval',
 ## For noisy data
 parser.add_argument('--noisy_eval', type=str, default=False,
                     help='If True then noisy evaluation');
-parser.add_argument('--noisy_train', type=str, default=False,
-                    help='If True then training with augmentations');
 parser.add_argument('--p_noise', type=float, default=0.3,
                     help='The noisy probability');
 parser.add_argument('--snr', type=float, default=0,
@@ -136,122 +136,57 @@ def main_worker(gpu, ngpus_per_node, args):
     ## Load models
     s = SpeakerNet(**vars(args));
 
-    if args.distributed:
-        os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = args.port
-
-        dist.init_process_group(backend='nccl', world_size=ngpus_per_node, rank=args.gpu)
-
-        torch.cuda.set_device(args.gpu)
-        s.cuda(args.gpu)
-
-        s = torch.nn.parallel.DistributedDataParallel(s, device_ids=[args.gpu], find_unused_parameters=True)
-
-        print('Loaded the model on GPU {:d}'.format(args.gpu))
-
-    else:
-        s = WrappedModel(s).cuda(args.gpu)
-
+    s = WrappedModel(s).cuda(args.gpu)
 
     modelfiles = glob.glob('%s/model0*.model' % args.model_save_path)
     modelfiles.sort()
 
-    noise_result_save_path = os.path.join(args.result_save_path, "noise_p_{}".format(args.p_noise))
-    if not (os.path.exists(noise_result_save_path)):
-        os.makedirs(noise_result_save_path)
-    print("noisy results save path {}".format(noise_result_save_path))
+    # The path to save results on the new validation set
+    filename = "scores"
+    new_result_save_path = args.result_save_path
+    if args.noisy_eval:
+        new_result_save_path = os.path.join(new_result_save_path, "noise_p_{}".format(args.p_noise))
+        filename = filename+"_snr_{}_p_{}".format(args.snr, args.p_noise)
 
-    filename = "valid_scores_snr_{}_p_{}.txt".format(args.snr, args.p_noise)
+    if "gender" in args.test_list:
+        new_result_save_path = os.path.join(new_result_save_path, "gender")
+        filename = filename+"_gender"
+    filename = filename+".txt"
 
-    if args.eval:
+    if not (os.path.exists(new_result_save_path)):
+        os.makedirs(new_result_save_path)
+    print("New results save path {}".format(new_result_save_path))
 
-        # Reevaluate based on valid_scores.txt to compute test score
-        scorefile = open(os.path.join(noise_result_save_path, filename), "r");
-        lines_veer = [[int(line.split()[1]), float(line.split()[3])] for line in scorefile if "VEER" in line]
-        lines_veer = numpy.array(lines_veer)
-
-        if args.valid_model:
-            args.model_it = lines_veer[:, 1].argmin()
-        else:
-            args.model_it = -1
-
+    # Go through all saved models and test on the new validation set
+    scorefile = open(os.path.join(new_result_save_path, filename), "a+")
+    for i in range(len(modelfiles)):
         trainer = ModelTrainer(s, **vars(args))
-        if len(modelfiles) >= 1:
-            if (args.model_it == -1):
-                print("Requested to load the model at the latest iteration")
-            else:
-                print("Requested to load the model at the iteration id = {}".format(int(lines_veer[args.model_it, 0])))
-            trainer.loadParameters(modelfiles[args.model_it]);
-            print("Loaded model {}".format(modelfiles[args.model_it]))
+        args.model_it = i * args.test_interval + args.test_interval
 
-        elif (args.initial_model != ""):
-            trainer.loadParameters(args.initial_model);
-            print("Model {} loaded!".format(args.initial_model));
+        # Load the model at the specific iteration
+        print("Loading the model at iteration id = {}".format(args.model_it))
+        trainer.loadParameters(modelfiles[i])
+        print("Loaded model {}".format(modelfiles[i]))
         pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
-
         print('Total parameters: ', pytorch_total_params)
-        print('Test list', args.test_list)
 
-        assert args.distributed == False
-
+        print('Start evaluation on test list', args.test_list)
         sc, lab, _ = trainer.evaluateFromList(**vars(args))
         result = tuneThresholdfromScore(sc, lab, [1, 0.1]);
-        recordPredictions(sc, result[4], noise_result_save_path, **vars(args))
 
-        p_target = 0.05
-        c_miss = 1
-        c_fa = 1
+        if args.noisy_eval:
+            print("\nEpoch {:d} VEER {:2.4f} Noisy evaluation {} snr {}".format(
+                args.model_it, result[1], args.noisy_eval, args.snr));
+            scorefile.write("Epoch {:d} VEER {:2.4f} Noisy evaluation {} snr {}\n".format(
+                args.model_it, result[1], args.noisy_eval, args.snr));
+        else:
+            print("\nEpoch {:d} VEER {:2.4f} Gender evaluation".format(
+                args.model_it, result[1]))
+            scorefile.write("Epoch {:d} VEER {:2.4f} Gender evaluation\n".format(
+                args.model_it, result[1]))
 
-        fnrs, fprs, thresholds = ComputeErrorRates(sc, lab)
-        mindcf, threshold = ComputeMinDcf(fnrs, fprs, thresholds, p_target, c_miss, c_fa)
+    scorefile.close()
 
-        scorefile.close()
-
-        scorefile = open(args.result_save_path + "/scores.txt", "r");
-        lines = [line for line in scorefile if ("Epoch {:d}".format(int(lines_veer[args.model_it, 0])) in line)]
-        scorefile.close()
-
-        eval_scorefile = open(noise_result_save_path + "/eval_scores.txt", "a+");
-
-        print(lines[1])
-        eval_scorefile.write(lines[1])
-        print("\nEpoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
-        eval_scorefile.write("Epoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
-        print('\n', time.strftime("%Y-%m-%d %H:%M:%S"), "EER {:2.4f}".format(result[1]),
-              "MinDCF {:2.5f}".format(mindcf), "Noisy evaluation {}".format(args.noisy_eval),
-              "snr {}".format(args.snr), "p {}".format(args.p_noise));
-        eval_scorefile.write(
-            "EER {:2.4f} MinDCF {:2.5f} Noisy evaluation {} snr {} p {}\n".format(result[1], mindcf, args.noisy_eval, args.snr, args.p_noise))
-        eval_scorefile.close()
-
-    else:
-
-        # Revalidate, go through all saved models and evaluate on the validation set
-        scorefile = open(os.path.join(noise_result_save_path, filename), "a+");
-        for i in range(len(modelfiles)):
-
-            trainer = ModelTrainer(s, **vars(args))
-            args.model_it = i*args.test_interval+args.test_interval
-
-            # load the model
-            print("Loading the model at iteration id = {}".format(args.model_it))
-
-            trainer.loadParameters(modelfiles[i]);
-            print("Loaded model {}".format(modelfiles[i]))
-
-            pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
-            print('Total parameters: ', pytorch_total_params)
-            print('Test list', args.test_list)
-
-            assert args.distributed == False
-
-            sc, lab, _ = trainer.evaluateFromList(**vars(args))
-            result = tuneThresholdfromScore(sc, lab, [1, 0.1]);
-
-            print("\nEpoch {:d} VEER {:2.4f} Noisy evaluation {} snr {}".format(args.model_it, result[1], args.noisy_eval, args.snr));
-            scorefile.write("Epoch {:d} VEER {:2.4f} Noisy evaluation {} snr {}\n".format(args.model_it, result[1], args.noisy_eval, args.snr));
-
-        scorefile.close();
 
 ## ===== ===== ===== ===== ===== ===== ===== =====
 ## Main function
@@ -268,8 +203,13 @@ def main(args):
 
     if "valid" in args.test_list:
         args.eval_lists_save_path = os.path.join(args.eval_lists_save_path, "valid")
+        args.noisy_eval_lists_save_path = os.path.join(args.noisy_eval_lists_save_path, "valid")
     else:
         args.eval_lists_save_path = os.path.join(args.eval_lists_save_path, "test")
+        args.noisy_eval_lists_save_path = os.path.join(args.noisy_eval_lists_save_path, "test")
+    if "gender" in args.test_list:
+        args.eval_lists_save_path = os.path.join(args.eval_lists_save_path, "gender")
+        args.noisy_eval_lists_save_path = os.path.join(args.noisy_eval_lists_save_path, "gender")
 
     if not (os.path.exists(args.model_save_path)):
         os.makedirs(args.model_save_path)
@@ -321,6 +261,6 @@ if __name__ == '__main__':
     numpy.random.seed(args.seed)
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     torch.set_deterministic(True)  # for pytorch version 1.7
-    torch.use_deterministic_algorithms(True) #for pytorch version 1.8
+    torch.use_deterministic_algorithms(True)  # for pytorch version 1.8
 
     main(args)

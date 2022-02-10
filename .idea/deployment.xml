@@ -6,7 +6,6 @@
         <serverdata>
           <mappings>
             <mapping deploy="/home/madina_abdrakhmanova/Projects/trimodal_speaker_recognition" local="$PROJECT_DIR$" web="/" />
-            <mapping local="" />
           </mappings>
         </serverdata>
       </paths>

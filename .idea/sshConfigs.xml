@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="localhost" id="e18434ed-2633-420e-87aa-b1980fe887be" keyPath="$USER_HOME$/.ssh/issai_key" port="6100" nameFormat="DESCRIPTIVE" username="madina_abdrakhmanova" />
+    </configs>
+  </component>
+</project>
