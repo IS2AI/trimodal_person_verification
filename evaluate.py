@@ -303,6 +303,6 @@ if __name__ == '__main__':
     numpy.random.seed(args.seed)
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     torch.set_deterministic(True)  # for pytorch version 1.7
-    torch.use_deterministic_algorithms(True) #for pytorch version 1.8
+    #torch.use_deterministic_algorithms(True) #for pytorch version 1.8
 
     main(args)
