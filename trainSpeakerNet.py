@@ -88,7 +88,7 @@ parser.add_argument('--log_input', type=bool, default=False, help='Log input fea
 parser.add_argument('--model', type=str, default="", help='Name of model definition');
 parser.add_argument('--encoder_type', type=str, default="SAP", help='Type of encoder');
 parser.add_argument('--nOut', type=int, default=512, help='Embedding size in the last FC layer');
-parser.add_argument('--filters', nargs=4, type=int, default=[32, 64, 128, 256],
+parser.add_argument('--filters', nargs=4, type=int, default=[16, 32, 64, 128],
                     help="the list of number of filters for each of the 4 layers in ResNet34")
 parser.add_argument('--modality', type=str, default="rgb",
                     help='Data streams to use, e.g. audio: "wav", visual: "rgb", thermal: "thr", all streams: "wavrgbthr');
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     ### To select a specific GPU available
     gpu_id = args.gpu_id
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
-
+    print(os.environ["CUDA_VISIBLE_DEVICES"])
     ### To select a specific seed for reproducibility
     torch.manual_seed(args.seed)
     random.seed(args.seed)

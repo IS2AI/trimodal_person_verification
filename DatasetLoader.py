@@ -184,7 +184,7 @@ def noise_train_set(modality, wav, rgb, thr, musan_path, evalmode, p_noise=0.3, 
                 data[mode] = augment_functions[mode](data[mode], t-1)
 
     return (*data,)
-
+'''
 def get_img_list(data_path, filename, speaker_id, modality, max_images):
     tmp = sorted(glob.glob(os.path.join(data_path, speaker_id, modality, filename)),
                  key=lambda f: int(f.split('_')[-2]))
@@ -198,7 +198,19 @@ def get_img_list(data_path, filename, speaker_id, modality, max_images):
     else:
         tmp = [tmp[i] for i in numpy.linspace(0, len(tmp) - 1, endpoint=True, num=max_images, dtype=int).tolist()]
         return tmp
+'''
+def get_img_list(p, max_images):
 
+    l = glob.glob(p)
+    tmp = sorted(l, key=lambda f:int(f.split(os.sep)[-1].split('.')[0]))
+    if len(tmp) < max_images:
+        max_images = len(tmp)
+    if max_images == 1:
+        return [tmp[0]]
+    else:
+        print(tmp)
+        tmp = [tmp[i] for i in numpy.linspace(0, len(tmp) - 1, endpoint=True, num=max_images, dtype=int).tolist()]
+        return tmp
 
 def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
     # Maximum audio length
@@ -232,6 +244,8 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
 
 
 def loadIMG(filenames, img_size, mean_train=[0, 0, 0]):
+    #print("[INFO] filenames ", filenames)
+    #print("[INFO] img_size ", img_size)
     # read images
     images = [Image.open(image) for image in filenames]
 
@@ -252,17 +266,19 @@ def load_train_lists(path):
 
     with open(os.path.join(path, "wav_list.txt")) as f:
         wav_list = f.read().split()
-
+    
     with open(os.path.join(path, "rgb_list.txt")) as f:
         rgb_list = [line.split() for line in f.readlines()]
-
+    '''
     with open(os.path.join(path, "thr_list.txt")) as f:
         thr_list = [line.split() for line in f.readlines()]
-
+    '''
     with open(os.path.join(path, "label_list.txt")) as f:
         label_list = list(map(int, f.read().split()))
+    
+    #return wav_list, rgb_list, thr_list, label_list
 
-    return wav_list, rgb_list, thr_list, label_list
+    return wav_list, rgb_list, [], label_list
 
 
 class train_dataset_loader(Dataset):
@@ -316,7 +332,13 @@ class train_dataset_loader(Dataset):
             # wav
             filename = os.path.join(train_path, data[1])
             self.data_list.append(filename)
-
+            
+            # rgb
+            clip_id = str(int(data[1].split('/')[-1].split('.')[0]))
+            path_rgb = os.path.join(train_path, os.sep.join(data[1].split(os.sep)[:-2]), "rgb", clip_id, "*.jpg")
+            img_list = get_img_list(path_rgb, self.num_images)
+            self.data_list_rgb.append(img_list)
+            '''
             # rgb
             filename = data[1].split('/')[-1].split('.')[0][:-1] + '*'
             img_list = get_img_list(train_path, filename, data[0], "rgb", self.num_images)
@@ -328,7 +350,7 @@ class train_dataset_loader(Dataset):
 
             assert len(self.data_list_rgb[-1]) == len(self.data_list_thr[-1]), \
                 "number of frames in rgb and thr are not equal in: " + filename
-
+            '''
         os.makedirs(train_lists_save_path)
         with open(os.path.join(train_lists_save_path, 'wav_list.txt'), 'w') as f:
             f.write(" ".join(self.data_list))
@@ -543,18 +565,27 @@ class test_dataset_loader(Dataset):
         else:
             # based on test_list create test_list_rgb and test_list_thr to contain the relevant names
             for audio_filename in self.test_list:
-                speaker_id = audio_filename.split('/')[0]
-                filename = audio_filename.split('/')[-1].split('.')[0][:-1] + '*'
-
+                #speaker_id = audio_filename.split('/')[0]
+                #filename = audio_filename.split('/')[-1].split('.')[0][:-1] + '*'
+                # rgb
+                #print(audio_filename)
+                clip_id = str(int(audio_filename.split('/')[-1].split('.')[0]))
+                #print(clip_id)
+                path_rgb = os.path.join(self.test_path, os.sep.join(audio_filename.split(os.sep)[:-2]), "rgb", clip_id, "*.jpg")
+                #print(path_rgb)
+                img_list = get_img_list(path_rgb, num)
+                print(img_list)
+                self.test_list_rgb.append(img_list)
+                '''
                 img_list = get_img_list(self.test_path, filename, speaker_id, "rgb", num)
                 self.test_list_rgb.append(img_list)
 
                 img_list = get_img_list(self.test_path, filename, speaker_id, "thr", num)
                 self.test_list_thr.append(img_list)
-
+                '''
             # save lists for further usage
             os.makedirs(eval_lists_save_path)
-
+            
             with open(os.path.join(eval_lists_save_path, 'rgb_list.txt'), 'w') as f:
                 for line in self.test_list_rgb:
                     f.write(" ".join(line) + "\n")
@@ -563,7 +594,7 @@ class test_dataset_loader(Dataset):
                 for line in self.test_list_thr:
                     f.write(" ".join(line) + "\n")
 
-
+            
         if self.noisy_eval:
             noisy_eval_lists_save_path = os.path.join(noisy_eval_lists_save_path, self.modality)
             if os.path.exists(noisy_eval_lists_save_path):
