@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--path_rgb', required=True, type=str, help='Path to the visual predictions')
 parser.add_argument('--path_wav', required=True, type=str, help='Path to the audio predictions')
 parser.add_argument('--path_thr', default="", type=str, help='Path to the thermal predictions')
-parser.add_argument('--save_path', required=True, type=str, help='Path for saving the predictions')
-parser.add_argument('--test_list', required=True, type=str, help='Evaluation list for which to save predictions')
+#parser.add_argument('--save_path', required=True, type=str, help='Path for saving the predictions')
+#parser.add_argument('--test_list', required=True, type=str, help='Evaluation list for which to save predictions')
 
 
 def simple_fusion(rgb_scores_filename, thr_scores_filename, wav_scores_filename, save_path, test_list):
@@ -32,13 +32,13 @@ def simple_fusion(rgb_scores_filename, thr_scores_filename, wav_scores_filename,
     fnrs, fprs, thresholds = ComputeErrorRates(mean_scores, true_labels)
     mindcf, threshold = ComputeMinDcf(fnrs, fprs, thresholds, p_target, c_miss, c_fa)
 
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    recordPredictions(mean_scores, result[4], save_path, test_list, True)
+#    if not os.path.exists(save_path):
+#        os.makedirs(save_path)
+#    recordPredictions(mean_scores, result[4], save_path, test_list, True)
 
     eer = result[1]
     print('EER: {eer:0.4f}, MinDCF: {mindcf:0.4f}')
-    return eer, mindcf
+#    return eer, mindcf
 
 
 args = parser.parse_args()
