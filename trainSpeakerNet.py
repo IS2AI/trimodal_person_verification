@@ -202,7 +202,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     elif (args.initial_model != ""):
         trainer.loadParameters(args.initial_model);
-        print("Model {} loaded!".format(args.initial_model));
+        print("Model {} loaded".format(args.initial_model));
 
     for ii in range(1, it):
         trainer.__scheduler__.step()
@@ -239,9 +239,9 @@ def main_worker(gpu, ngpus_per_node, args):
         print(lines[1])
         eval_scorefile.write(lines[1])
         print('\n', time.strftime("%Y-%m-%d %H:%M:%S"), "EER {:2.4f}".format(result[1]),
-              "MinDCF {:2.5f}".format(mindcf), "Noisy evaluation {}".format(args.noisy_eval), "snr {}".format(args.snr));
+              "MinDCF {:2.5f}".format(mindcf), "Noisy Evaluation {}".format(args.noisy_eval), "SNR {}".format(args.snr));
         eval_scorefile.write(
-            "EER {:2.4f} MinDCF {:2.5f} Noisy evaluation {} snr {} \n".format(result[1], mindcf, args.noisy_eval, args.snr))
+            "EER {:2.4f} MinDCF {:2.5f} Noisy Evaluation {} SNR {} \n".format(result[1], mindcf, args.noisy_eval, args.snr))
         eval_scorefile.close()
         quit();
 
@@ -280,8 +280,6 @@ def main_worker(gpu, ngpus_per_node, args):
             trainer.saveParameters(args.model_save_path + "/model%09d.model" % it);
 
         if args.gpu == 0:
-            # print('\n',time.strftime("%Y-%m-%d %H:%M:%S"), "Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f}".format(it, traineer.item(), loss.item(), max(clr)));
-            # scorefile.write("Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f} \n".format(it, traineer.item(), loss.item(), max(clr)));
             print('\n', time.strftime("%Y-%m-%d %H:%M:%S"),
                   "Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f}".format(it, traineer, loss, max(clr)));
             scorefile.write("Epoch {:d} TEER/TAcc {:2.2f} TLOSS {:f} LR {:f} \n".format(it, traineer, loss, max(clr)));

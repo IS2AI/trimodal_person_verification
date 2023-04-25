@@ -186,7 +186,6 @@ def noise_train_set(modality, wav, rgb, thr, musan_path, evalmode, p_noise=0.3, 
     return (*data,)
 
 def get_img_list(p, max_images):
-
     l = glob.glob(p)
     tmp = sorted(l, key=lambda f:int(f.split(os.sep)[-1].split('.')[0]))
     if len(tmp) < max_images:
@@ -230,8 +229,6 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
 
 
 def loadIMG(filenames, img_size, mean_train=[0, 0, 0]):
-    #print("[INFO] filenames ", filenames)
-    #print("[INFO] img_size ", img_size)
     # read images
     images = [Image.open(image) for image in filenames]
 
@@ -263,8 +260,6 @@ def load_train_lists(path):
         label_list = list(map(int, f.read().split()))
     
     return wav_list, rgb_list, thr_list, label_list
-
-    #return wav_list, rgb_list, [], label_list
 
 
 class train_dataset_loader(Dataset):
@@ -338,7 +333,6 @@ class train_dataset_loader(Dataset):
 
             assert len(self.data_list_rgb[-1]) == len(self.data_list_thr[-1]), \
                 "number of frames in rgb and thr are not equal in: " + filename
-            
         os.makedirs(train_lists_save_path)
         with open(os.path.join(train_lists_save_path, 'wav_list.txt'), 'w') as f:
             f.write(" ".join(self.data_list))
@@ -559,16 +553,15 @@ class test_dataset_loader(Dataset):
         else:
             # based on test_list create test_list_rgb and test_list_thr to contain the relevant names
             for audio_filename in self.test_list:
-                # rgb
                 clip_id = str(int(audio_filename.split('/')[-1].split('.')[0]))
                 path_rgb = os.path.join(self.test_path, os.sep.join(audio_filename.split(os.sep)[:-2]), "rgb", clip_id, "*.jpg")
                 img_list = get_img_list(path_rgb, num)
                 self.test_list_rgb.append(img_list)
-                
+                    
                 path_thr = os.path.join(self.test_path, os.sep.join(audio_filename.split(os.sep)[:-2]), "thr", clip_id, "*.jpg")
                 img_list = get_img_list(path_thr, num)
                 self.test_list_thr.append(img_list)
-                
+            
             # save lists for further usage
             os.makedirs(eval_lists_save_path)
             
@@ -718,11 +711,7 @@ class train_dataset_sampler(torch.utils.data.Sampler):
             return iter(mixed_list[start_index:end_index])
         else:
             total_size = len(mixed_list) - len(mixed_list) % self.batch_size
-            
-            #print("[IMPORTANT]\n batch_size = {},\n nPerSpeaker = {},\n the size of the train list = {},\n the size of flattened_list = {},\n the size of mixmap = {},\n total_size = {}".format(self.batch_size, self.nPerSpeaker, len(self.data_label), len(flattened_list), len(mixmap), total_size))
             flat_list = [item for sublist in mixed_list[:total_size] for item in sublist]
-            #print("the size of the final train list = {}".format(len(flat_list)))
-            #print("the number of unique subjects = {}".format(len(numpy.unique(self.data_label))))
             return iter(mixed_list[:total_size])
 
     def __len__(self):

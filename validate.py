@@ -20,8 +20,6 @@ import torch.multiprocessing as mp
 ## ===== ===== ===== ===== ===== ===== ===== =====
 import os
 
-# os.environ["CUDA_VISIBLE_DEVICES"]='0'
-
 parser = argparse.ArgumentParser(description="SpeakerNet");
 
 parser.add_argument('--config', type=str, default=None, help='Config YAML file');
@@ -175,14 +173,14 @@ def main_worker(gpu, ngpus_per_node, args):
         result = tuneThresholdfromScore(sc, lab, [1, 0.1]);
 
         if args.noisy_eval:
-            print("\nEpoch {:d} VEER {:2.4f} Noisy evaluation {} snr {}".format(
+            print("\nEpoch {:d} VEER {:2.4f} Noisy Evaluation {} SNR {}".format(
                 args.model_it, result[1], args.noisy_eval, args.snr));
-            scorefile.write("Epoch {:d} VEER {:2.4f} Noisy evaluation {} snr {}\n".format(
+            scorefile.write("Epoch {:d} VEER {:2.4f} Noisy Evaluation {} SNR {}\n".format(
                 args.model_it, result[1], args.noisy_eval, args.snr));
         else:
-            print("\nEpoch {:d} VEER {:2.4f} Gender evaluation".format(
+            print("\nEpoch {:d} VEER {:2.4f} Gender Evaluation".format(
                 args.model_it, result[1]))
-            scorefile.write("Epoch {:d} VEER {:2.4f} Gender evaluation\n".format(
+            scorefile.write("Epoch {:d} VEER {:2.4f} Gender Evaluation\n".format(
                 args.model_it, result[1]))
 
     scorefile.close()

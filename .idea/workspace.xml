@@ -9,7 +9,10 @@
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/trimodal_person_verification.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/trimodal_person_verification.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/DatasetLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/DatasetLoader.py" afterDir="false" />
+=======
+>>>>>>> f99f21eeef936c959cc7d3c69da05e9d261a564c
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -202,9 +205,14 @@
       <workItem from="1644462795298" duration="13827000" />
       <workItem from="1644640594038" duration="1952000" />
       <workItem from="1644657210469" duration="1840000" />
+<<<<<<< HEAD
       <workItem from="1645171253954" duration="1132000" />
       <workItem from="1661924444207" duration="2438000" />
       <workItem from="1662023116776" duration="599000" />
+=======
+      <workItem from="1645171253954" duration="1866000" />
+      <workItem from="1651243190453" duration="618000" />
+>>>>>>> f99f21eeef936c959cc7d3c69da05e9d261a564c
     </task>
     <servers />
   </component>

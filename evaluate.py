@@ -20,8 +20,6 @@ import torch.multiprocessing as mp
 ## ===== ===== ===== ===== ===== ===== ===== =====
 import os
 
-# os.environ["CUDA_VISIBLE_DEVICES"]='0'
-
 parser = argparse.ArgumentParser(description="SpeakerNet");
 
 parser.add_argument('--config', type=str, default=None, help='Config YAML file');
@@ -191,7 +189,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     elif (args.initial_model != ""):
         trainer.loadParameters(args.initial_model);
-        print("Model {} loaded!".format(args.initial_model));
+        print("Model {} loaded".format(args.initial_model));
     pytorch_total_params = sum(p.numel() for p in s.module.__S__.parameters())
 
     print('Total parameters: ', pytorch_total_params)
@@ -223,10 +221,10 @@ def main_worker(gpu, ngpus_per_node, args):
         print("\nEpoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
         eval_scorefile.write("Epoch {:d} VEER {:2.4f}\n".format(int(lines_veer[args.model_it,0]), lines_veer[args.model_it,1]))
         print('\n', time.strftime("%Y-%m-%d %H:%M:%S"), "EER {:2.4f}".format(result[1]),
-              "MinDCF {:2.5f}".format(mindcf), "Noisy evaluation {}".format(args.noisy_eval),
-              "snr {}".format(args.snr), "p {}".format(args.p_noise));
+              "MinDCF {:2.5f}".format(mindcf), "Noisy Evaluation {}".format(args.noisy_eval),
+              "SNR {}".format(args.snr), "p {}".format(args.p_noise));
         eval_scorefile.write(
-            "EER {:2.4f} MinDCF {:2.5f} Noisy evaluation {} snr {} p {}\n".format(result[1], mindcf, args.noisy_eval, args.snr, args.p_noise))
+            "EER {:2.4f} MinDCF {:2.5f} Noisy Evaluation {} SNR {} P {}\n".format(result[1], mindcf, args.noisy_eval, args.snr, args.p_noise))
         eval_scorefile.close()
 
 

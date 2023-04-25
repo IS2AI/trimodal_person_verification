@@ -5,11 +5,11 @@ import os
 from tuneThreshold import tuneThresholdfromScore, ComputeErrorRates, ComputeMinDcf, recordPredictions
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--path_1', required=True, type=str, help='Path to the 1st predictions')
-parser.add_argument('--path_2', required=True, type=str, help='Path to the 2nd predictions')
-parser.add_argument('--path_3', default="", type=str, help='Path to the 3d predictions')
-parser.add_argument('--path_4', default="", type=str, help='Path to the 4th predictions')
-parser.add_argument('--path_5', default="", type=str, help='Path to the 5th predictions')
+parser.add_argument('--path_1', required=True, type=str, help='Path to the 1st prediction file')
+parser.add_argument('--path_2', required=True, type=str, help='Path to the 2nd prediction file')
+parser.add_argument('--path_3', default="", type=str, help='Path to the 3d prediction file')
+parser.add_argument('--path_4', default="", type=str, help='Path to the 4th prediction file')
+parser.add_argument('--path_5', default="", type=str, help='Path to the 5th prediction file')
 
 def compute_scores(mean_scores, true_labels):
     p_target = 0.05
