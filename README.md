@@ -12,7 +12,12 @@ The preprocessed data used for our experiments can be downloaded from [Google Dr
 The *data* directory contains the compressed version of the preprocessed data used for the reported experiments. For each utterance, only the first frame (visual and thermal) is selected. The train set is split into 5 parts that should be extracted into the same location. 
 
 
-The data/metadata.zip contains lists prepared for the train, validation, and test sets following the format of VoxCeleb. In particular, the train list contains the paths to the recordings and the corresponding subject identifiers. The validation and test lists consist of randomly generated positive and negative pairs. For each subject, the same number of positive and negative pairs were selected. In total, the numbers of pairs in the validation and test sets are 38,000 and 46,200, respectively.
+The *data/metadata* contains lists prepared for the train, validation, and test sets for the experiments featured in both papers:
+1) *train_list.txt* contains the paths to the recordings and the corresponding subject identifiers present in SpeakingFaces. 
+2) The *valid_list.txt* and *test_list.txt* consist of randomly generated positive and negative pairs taken from the validation and test splits of SpeakingFaces, respectively. For each subject, the same number of positive and negative pairs were selected. In total, the numbers of pairs in the validation and test sets are 38,000 and 46,200, respectively.
+3) *train_list_1_percent.txt*, *train_list_5_percent.txt*, *train_list_100_percent.txt* were designed to combine the train splits of SpeakingFaces and VoxCeleb datasets. 
+*train_list_1_percent.txt* - the total number of subjects was increased from 100 to 160 by adding a random 1% of training subjects from VoxCeleb.  *train_list_5_percent.txt* - 4% of new random subjects from the VoxCeleb2 development split were added to the existing 1% in *train_list_1_percent.txt*.
+*train_list_100_percent.txt* - all data from the VoxCeleb2 development split were combined with SpeakingFaces
 
 Note, to run noisy training and evaluation, you should first download the [MUSAN dataset](http://www.openslr.org/17/).
 
